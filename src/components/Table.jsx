@@ -5,56 +5,71 @@ import moment from 'moment'
 import { useState, useEffect } from 'react';
 
 
-function Table({ accountData }) {
+function Table({ accountData, mainBalance, accountBalance }) {
+  
+  const processedData = accountData
+
+  const [totalBalance, setTotalBalance] = useState(0)
+  const [balanceInPeriod, setBalanceInPeriod] = useState(0)
 
   // Lógica para paginação    
-  const pageSize = 4
   const [currentPage, setCurrentPage] = useState(1)
-  const totalPages = Math.ceil(accountData.length / pageSize);
+  const pageSize = 4
+  const totalPages = Math.ceil(processedData.length / 4)
+  
+  
+  useEffect(() => {
+    calcBalancesInPeriod(processedData)
+    if (accountBalance) {
+      setTotalBalance(accountBalance)
+    } else {
+      setTotalBalance(mainBalance)
+    }
+  },[accountData, accountBalance])
 
-  const [processedData, setProcessedData] = useState([]);
-
-
-  function handlePageChange(pageSelected) {
-    setCurrentPage(pageSelected)
+  function calcBalancesInPeriod( objs ) {
+    let sumedValues = 0
+    for (const obj of objs) {
+      sumedValues += obj.valor
+    }
+    setBalanceInPeriod(sumedValues)
   }
 
-  useEffect(() => {
-    let dadosProcessados;
+  
+  function formatValueInCurrency (value) {    
+    const formattedValue = value.toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    })
 
-    if (Array.isArray(accountData)) {
-      dadosProcessados = accountData;
-    }
-    else if (typeof accountData === 'object' && accountData !== null && 'content' in accountData) {
-      dadosProcessados = accountData.content;
-    } else {
-      throw new Error('Formato de dados desconhecido');
-    }
+    return value < 0 ? `R$ -${value.toString().replace('-', '')}` : formattedValue
+  }
 
-    setProcessedData(dadosProcessados);
-  }, [accountData]);
 
 
   // Lógica para exibição da tabela 
   const startIndex = (currentPage - 1) * pageSize
   const endIndex = startIndex + pageSize
-
   const currentData = processedData.slice(startIndex, endIndex);
 
 
-  const formattedValue = { style: 'currency', currency: 'BRL' }
+  
 
   return (
 
     <>
       {
-        processedData.length
+        currentData.length
           ?
           <table>
             <thead>
               <tr className='saldo'>
-                <th colSpan="2">Salto Total: R$50,00</th>
-                <th colSpan="2">Saldo no período: R$50,00</th>
+                <th colSpan="2">
+                  {`Saldo total: ${formatValueInCurrency(totalBalance)}`}
+                </th>
+                <th colSpan="2">
+                  {`Saldo no período: R$ ${formatValueInCurrency(balanceInPeriod)}`}
+                </th>
               </tr>
               <tr className='tipo'>
                 <th>Dados</th>
@@ -69,7 +84,7 @@ function Table({ accountData }) {
                 return (
                   <tr key={index}>
                     <td data-label="Data">{moment(row.dataTransferencia, 'DD-MM-YYYY').format('DD/MM/YYYY')}</td>
-                    <td data-label="Valor">{row.valor.toLocaleString('pt-BR', formattedValue)}</td>
+                    <td data-label="Valor">{formatValueInCurrency(row.valor)}</td>
                     <td data-label="Tipo">{row.tipo}</td>
                     <td data-label="Nome Operador Transacionado">{row.nomeOperadorTransacao}</td>
                   </tr>
@@ -82,7 +97,7 @@ function Table({ accountData }) {
                   {Array.from({ length: totalPages }, (_, index) => (
                     <button
                       key={index}
-                      onClick={() => handlePageChange(index + 1)}
+                      onClick={() => setCurrentPage(index + 1)}
                       disabled={currentPage === index + 1}
                     >
                       {index + 1}
@@ -94,7 +109,7 @@ function Table({ accountData }) {
 
           </table>
           :
-          <h1>Nada encontrado...</h1>
+          <h1>Nada encontrado</h1>
       }
     </>
   )

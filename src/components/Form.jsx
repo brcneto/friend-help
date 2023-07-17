@@ -1,10 +1,9 @@
 import axios from 'axios'
 import style from '../styles/Form.module.css'
 
-import { useState } from 'react';
-import { toast } from 'react-toastify';
+import { useState } from 'react'
 
-export default function Form ({accountNames, setAccountData}) {
+export default function Form ({accountNames, setAccountData, setAccountBalance}) {
 
   const [accountName, setAccountName] = useState('')
   const [startDate, setStartDate] = useState('')
@@ -13,7 +12,7 @@ export default function Form ({accountNames, setAccountData}) {
 
 
   const handleSubmit = (event) => {
-    event.preventDefault();
+    event.preventDefault()
 
     let baseUrl = 'http://179.108.250.70/transferencias'
     
@@ -33,22 +32,25 @@ export default function Form ({accountNames, setAccountData}) {
           selectedAccountId = account.contaId
         }
       }
+      
       if (selectedAccountId) {       
-        baseUrl += `/conta/${selectedAccountId}`;
+        baseUrl += `/conta/${selectedAccountId}`
       } else {
         baseUrl = 'http://179.108.250.70/transferencias'
       }
     }
     
-    const queryParams = {};
-    if(accountName) queryParams.conta = accountName;
-    if(startDate) queryParams.inicio = startDate;
-    if(endDate) queryParams.fim = endDate;
-    if(operatorName) queryParams.nomeOperadorTransacao = operatorName;
+    const queryParams = {}
+    if(accountName) queryParams.conta = accountName
+    if(startDate) queryParams.inicio = startDate
+    if(endDate) queryParams.fim = endDate
+    if(operatorName) queryParams.nomeOperadorTransacao = operatorName
 
     axios.get(baseUrl, { params: queryParams })
     .then(response => {
-      setAccountData(response.data.transferencias);
+      setAccountData(response.data.transferencias.content)
+      setAccountBalance(response.data.saldo)
+      console.log(response.data);
     })
     .catch((error) => {
       console.error('Erro na requisição do form', error);
@@ -66,12 +68,12 @@ export default function Form ({accountNames, setAccountData}) {
         <div className={style.inputBox}>
           <label htmlFor="account">Conta</label>
           <select value={accountName} onChange={event => setAccountName(event.target.value)}>
-          <option value="all">Todas</option>
-            {accountNames.map((option, index)=> (
-              <option key={index} value={option.nomeResponsavel}>
-                {option.nomeResponsavel}
-              </option>
-            )
+            <option value="">Todas</option>
+              {accountNames.map((option, index)=> (
+                <option key={index} value={option.nomeResponsavel}>
+                  {option.nomeResponsavel}
+                </option>
+              )
             )}
           </select>
         </div>
