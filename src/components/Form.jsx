@@ -16,15 +16,13 @@ export default function Form ({accountNames, setAccountData, setAccountBalance})
 
     let baseUrl = 'http://179.108.250.70/transferencias'
     
-    const params = {
-      conta: accountName,
-      inicio: startDate,
-      fim: endDate,
-      nomeOperadorTransacao: operatorName
-    };
+    const queryParams = {}
+    if(startDate) queryParams.inicio = startDate
+    if(endDate) queryParams.fim = endDate
+    if(operatorName) queryParams.nomeOperadorTransacao = operatorName
 
-    
-    if(params.conta.trim() !== '') {
+          
+    if(accountName.trim() !== '') {
       let selectedAccountId
 
       for (const account of accountNames) {
@@ -35,26 +33,24 @@ export default function Form ({accountNames, setAccountData, setAccountBalance})
       
       if (selectedAccountId) {       
         baseUrl += `/conta/${selectedAccountId}`
-      } else {
-        baseUrl = 'http://179.108.250.70/transferencias'
+        axios.get(baseUrl, { params: queryParams })
+        .then(response => {
+          setAccountData(response.data.transferencias.content)
+          console.log(response.data.saldo);        
+        })
+        .catch((error) => {
+          console.error('Erro na requisição do form', error);
+        })
+        axios.get(baseUrl).then(response => setAccountBalance(response.data.saldo))
       }
+    } else {
+      axios.get(baseUrl, {params: queryParams})
+        .then(response => {
+          setAccountData(response.data.transferencias)
+        })
     }
-    
-    const queryParams = {}
-    if(accountName) queryParams.conta = accountName
-    if(startDate) queryParams.inicio = startDate
-    if(endDate) queryParams.fim = endDate
-    if(operatorName) queryParams.nomeOperadorTransacao = operatorName
 
-    axios.get(baseUrl, { params: queryParams })
-    .then(response => {
-      setAccountData(response.data.transferencias.content)
-      setAccountBalance(response.data.saldo)
-      console.log(response.data);
-    })
-    .catch((error) => {
-      console.error('Erro na requisição do form', error);
-    })
+
 
    
     setStartDate('')

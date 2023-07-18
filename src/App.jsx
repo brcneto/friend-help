@@ -20,13 +20,11 @@ function App() {
   
   const [mainBalance, setMainBalance] = useState(0)
   const [accountBalance, setAccountBalance] = useState(0)
-
-  let baseURL = 'http://179.108.250.70/transferencias'
  
   useEffect(() => {  
     let balance = 0
     
-    axios(baseURL)
+    axios('http://179.108.250.70/transferencias')
       .then(response => {
         for (const key of response.data.transferencias) {
           balance += key.valor
@@ -51,7 +49,11 @@ function App() {
         setAccountBalance={setAccountBalance}
       />
       {accountData.length > 0
-        ?<Table accountData={accountData} mainBalance={mainBalance} accountBalance={accountBalance}/>
+        ?<Table 
+            accountData={accountData}
+            mainBalance={mainBalance}
+            accountBalance={accountBalance}
+          />
         :<h1>Carregando...</h1> 
       }
     </>
